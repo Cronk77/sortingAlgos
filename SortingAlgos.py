@@ -7,14 +7,26 @@
 import numpy as np
 import datetime as dt
 import re
+import signal
+import time
 from numpy import random
 from os.path import exists
 
 
+class Timeout:
+    pass
+
 #Main___________________________________________________________________________________________________
 def main():
+
+    
     #Menu() call
     menu()
+
+#Handles timeouts if function runs too long and raises function defined exception ____________________
+def timeout_handler(num, stack):
+    print('Processing has timed out for ' + globalAlgoName + '!')
+    raise Timeout()
 
 #Menu___________________________________________________________________________________________________
 def menu():
@@ -30,7 +42,7 @@ def menu():
         printMenu(menuOptions)
         option = ''
         try:
-            option = int(input('Please select an option: '))
+            option = int(input('\nPlease select an option: \n'))
 
         except:
             print('Incorrect option inputed, please enter a valid number...')
@@ -65,55 +77,30 @@ def option1():
     x = int(input("Enter a integer that is the number of random integers (0-100) that will be sorted: "))
     arr = np.random.randint(100, size=(x))
 
-    print(arr)
+    if len(arr) < 1000:
+        print(arr)
     
     arr1 = arr.copy()
     arr2 = arr.copy()
     arr3 = arr.copy()
     arr4 = arr.copy()
     arr5 = arr.copy()
+    arr6 = arr.copy()
+
+    arr1 = algoFuncTimeCost(merge_sort, arr1, 'Merge Sort')
+
+    arr2 = algoFuncTimeCost(quickSort, arr2, 'Quick Sort')
+
+    arr3 = algoFuncTimeCost(bubbleSort, arr3, 'Bubble Sort')
+
+    arr4 = algoFuncTimeCost(insertionSort, arr4, 'Insertion Sort')
+                
+    arr5 = algoFuncTimeCost(selectionSort, arr5, 'Selection Sort')
+
+    arr6 = pySortAlgoTimeCost(arr6)
     
-    aMerge = dt.datetime.now()
-    merge_sort(arr1)
-    bMerge = dt.datetime.now()
-    cMerge = bMerge - aMerge
-    secondsMerge = cMerge.total_seconds()
-    print('\nMerge Sort time cost is: ', secondsMerge, ' seconds')
-    #print(arr1)
-
-    aQuick = dt.datetime.now()
-    quickSort(arr2)
-    bQuick = dt.datetime.now()
-    cQuick = bQuick - aQuick
-    secondsQuick = cQuick.total_seconds()
-    print('Quick Sort time cost is: ', secondsQuick, ' seconds')
-    #print(arr2)
-
-    aBubble = dt.datetime.now()
-    bubbleSort(arr3)
-    bBubble = dt.datetime.now()
-    cBubble = bBubble - aBubble
-    secondsBubble = cBubble.total_seconds()
-    print('Bubble Sort time cost is: ', secondsBubble, ' seconds')
-    #print(arr3)
-
-    aInsertion = dt.datetime.now()
-    insertionSort(arr4)
-    bInsertion = dt.datetime.now()
-    cInsertion = bInsertion - aInsertion
-    secondsInsertion = cInsertion.total_seconds()
-    print('Insertion Sort time cost is: ', secondsInsertion, ' seconds')
-    #print(arr4)
-
-    aSelection = dt.datetime.now()
-    selectionSort(arr5)
-    bSelection = dt.datetime.now()
-    cSelection = bSelection - aSelection
-    secondsSelection = cSelection.total_seconds()
-    print('Selection Sort time cost is: ', secondsSelection, ' seconds')
-    #print(arr5)
-
-    print('\nThe sorted list is:\n', arr1,'\n\n')
+    if len(arr6) < 1000:
+        print('\nThe sorted list is:\n', arr6,'\n')
 
     
 
@@ -130,54 +117,61 @@ def option2():
     list4 = list1.copy()
     list5 = list1.copy()
     list6 = list1.copy()
-    
-    aMerge = dt.datetime.now()
-    merge_sort(list2)
-    bMerge = dt.datetime.now()
-    cMerge = bMerge - aMerge
-    secondsMerge = cMerge.total_seconds()
-    print('\nMerge Sort time cost is: ', secondsMerge, ' seconds')
-    #print(list2)
-    
-    aQuick = dt.datetime.now()
-    quickSort(list3)
-    bQuick = dt.datetime.now()
-    cQuick = bQuick - aQuick
-    secondsQuick = cQuick.total_seconds()
-    print('Quick Sort time cost is: ', secondsQuick, ' seconds')
-    #print(list3)
-    
-    
-    
-    aBubble = dt.datetime.now()
-    bubbleSort(list4)
-    bBubble = dt.datetime.now()
-    cBubble = bBubble - aBubble
-    secondsBubble = cBubble.total_seconds()
-    print('Bubble Sort time cost is: ', secondsBubble, ' seconds')
-    #print(list4)
-    
+    list7 = list1.copy()
 
-    
-    aInsertion = dt.datetime.now()
-    insertionSort(list5)
-    bInsertion = dt.datetime.now()
-    cInsertion = bInsertion - aInsertion
-    secondsInsertion = cInsertion.total_seconds()
-    print('Insertion Sort time cost is: ', secondsInsertion, ' seconds')
-    #print(list5)
-    
 
-    aSelection = dt.datetime.now()
-    selectionSort(list6)
-    bSelection = dt.datetime.now()
-    cSelection = bSelection - aSelection
-    secondsSelection = cSelection.total_seconds()
-    print('Selection Sort time cost is: ', secondsSelection, ' seconds\n')
-    #print(list6)
+    list2 = algoFuncTimeCost(merge_sort,list2, 'Merge Sort')
+    
+    list3 = algoFuncTimeCost(quickSort,list3, 'Quick Sort')
+    
+    list4 = algoFuncTimeCost(bubbleSort,list4, 'Bubble Sort')
+    
+    list5 = algoFuncTimeCost(insertionSort,list5, 'Insertion Sort')
+    
+    list6 = algoFuncTimeCost(selectionSort,list6, 'Selection Sort')
 
-    if len(list2) < 1000:
-        print(list2, '\n')
+    list7 = pySortAlgoTimeCost(list7)
+    
+    if len(list7) < 1000:
+        print(list7, '\n')
+
+#Calculating the time cost for various algorithms_____________________________________________________
+def algoFuncTimeCost(sortAlgoFunc, tempList, sortingAlgoName):
+
+    global globalAlgoName
+    globalAlgoName = sortingAlgoName
+    
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(15)#The number inside is the number of seconds it will run the function before it throws an exception
+
+    try:
+        a = dt.datetime.now()
+        sortAlgoFunc(tempList)
+        b = dt.datetime.now()
+        c = b - a
+        seconds = c.total_seconds()
+        print(sortingAlgoName, ' time cost is: ', seconds, ' seconds\n')
+
+    except Exception as ex:
+        if TIMEOUT in ex:
+            print(sortingAlgoName, ' processing has timed out.')
+        else:    
+            print('An exception in processing the ', sortingAlgoName,' has occured')
+
+    finally:
+        signal.alarm(0)
+        return tempList
+
+#Calculating the time cost for the python library sorted algo_________________________________________
+def pySortAlgoTimeCost(tempList):
+    a = dt.datetime.now()
+    tempList = sorted(tempList)
+    b = dt.datetime.now()
+    c = b - a
+    seconds = c.total_seconds()
+    print('Python library sorting time cost is: ', seconds, ' seconds\n')
+    return tempList
+
 
 #Option 3: Sort File into an output .txt file__________________________________________________________
 def option3():
@@ -402,6 +396,8 @@ def selectionSort(arr):
     return arr
 
 ##########################################################################################################
+globalAlgoName = ''
+
 if __name__ == "__main__":
     main()
                       
